@@ -4,11 +4,14 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    privateSpawner spawner;
+    private Spawner spawner;
+    public GameObject title;
+    private Vector2 screenBounds;
 
     void Awake()
     {
         spawner = GameObject.Find("Spawner").GetComponent<Spawner>();
+        screenBounds = Camera.main.ScreenToWorldPoint(new Vector3(Screen.height, Camera.main.transform.position.z));
     }
     
 
@@ -16,6 +19,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         spawner.active = false;
+        title.SetActive(true);
     }
 
     // Update is called once per frame
@@ -24,6 +28,17 @@ public class GameManager : MonoBehaviour
         if(Input.anyKeyDown)
         {
             spawner.active = true;
+            title.SetActive(false);
+        }
+
+        var nextBomb = GameObject.FindGameObjectsWithTag("Bomb");
+
+        for each (GameObject bombOject in nextBomb)
+        {
+            if (bombOject.transform.position.y < (-screenBounds.y) - 12)
+            {
+                Destroy(BombObject);
+            }
         }
     }
 }
