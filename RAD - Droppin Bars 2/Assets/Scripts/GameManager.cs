@@ -1,17 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
     private Spawner spawner;
     public GameObject title;
     private Vector2 screenBounds;
+    public GameObject playerPrefab;
+    private GameObject player;
+    private bool gameStarted = false;
+    public GameObject splash;
+    public GameObject scoreSystem;
+    public Text scoreText;
+    public int pointsWorth = 1;
+    private int score;
 
     void Awake()
     {
         spawner = GameObject.Find("Spawner").GetComponent<Spawner>();
-        screenBounds = Camera.main.ScreenToWorldPoint(new Vector3(Screen.height, Camera.main.transform.position.z));
+        screenBounds = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, Camera.main.transform.position.z));
+        player = playerPrefab;
+        scoreText.enabled = false;
     }
     
 
@@ -20,25 +31,61 @@ public class GameManager : MonoBehaviour
     {
         spawner.active = false;
         title.SetActive(true);
+        splash.SetActive(false);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(Input.anyKeyDown)
+        if (!gameStarted)
+        {   
+             if(Input.anyKeyDown)
+            {
+            ResetGame();
+            spawner.active = true;
+            title.SetActive(false);
+            }
+        } else
+        {
+            if (!player)
+            {
+                OnPlayerKilled();
+            }
+        }
+    
+            void ResetGame()
         {
             spawner.active = true;
             title.SetActive(false);
+            splash.SetActive(false);
+            player = Instantiate(playerPrefab, new Vector3(0, 0, 0), playerPrefab.transform.rotation);
+            gameStarted = true;
+
+            scoreText.enabled = true;
+            scoreSystem.GetComponent<Score>().score = 0;
+            scoreSystem.GetComponent<Score>().Start();
         }
 
         var nextBomb = GameObject.FindGameObjectsWithTag("Bomb");
 
-        for each (GameObject bombOject in nextBomb)
+        foreach (GameObject bombObject in nextBomb)
         {
-            if (bombOject.transform.position.y < (-screenBounds.y) - 12)
+            if (!gameStarted)
             {
-                Destroy(BombObject);
+                Destroy(bombObject);
+            } else if (bombObject.transform.position.y < (-screenBounds.y) && gameStarted)
+            {
+                scoreSystem.GetComponent<Score>().AddScore(pointsWorth);
+                Destroy(bombObject);
+            }
             }
         }
+
+        void OnPlayerKilled()
+        {
+            spawner.active = false;
+            gameStarted = false;
+
+            splash.SetActive(true);
+        }
     }
-}
